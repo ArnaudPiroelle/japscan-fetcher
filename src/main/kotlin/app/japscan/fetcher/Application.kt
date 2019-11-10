@@ -23,6 +23,7 @@ import java.io.FileOutputStream
 import java.io.FileReader
 import java.io.FileWriter
 import java.lang.Exception
+import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -47,6 +48,9 @@ fun main() {
     val logging = HttpLoggingInterceptor()
     logging.level = HttpLoggingInterceptor.Level.NONE
     val client = OkHttpClient.Builder()
+        .connectTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
         .addInterceptor(logging)
         .build()
 
