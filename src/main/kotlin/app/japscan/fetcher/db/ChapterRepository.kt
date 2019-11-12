@@ -27,7 +27,7 @@ class ChapterRepository(private val db: Database) {
                     }
                 }
             } else {
-                Chapters.update {
+                Chapters.update(where = { Chapters.id eq existingChapter[Chapters.id] }) {
                     it[mangaAlias] = chapter.mangaAlias
                     it[number] = chapter.number
                     if (chapter.downloaded != null) {

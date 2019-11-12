@@ -26,8 +26,7 @@ class MangaRepository(private val db: Database) {
                     it[name] = manga.name
                 }
             } else {
-                Mangas.update {
-                    it[id] = existingManga[id]
+                Mangas.update(where = { Mangas.id eq existingManga[Mangas.id] }) {
                     it[alias] = manga.alias
                     it[name] = manga.name
                 }
