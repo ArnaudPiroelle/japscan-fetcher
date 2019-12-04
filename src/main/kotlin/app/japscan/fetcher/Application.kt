@@ -3,8 +3,12 @@ package app.japscan.fetcher
 import app.japscan.fetcher.api.JapScanProxyApiService
 import app.japscan.fetcher.db.ChapterRepository
 import app.japscan.fetcher.db.MangaRepository
+import app.japscan.fetcher.notifier.NotificationManager
 import app.japscan.fetcher.task.DownloadTask
+import com.arnaudpiroelle.notifier.Notifier
+import com.arnaudpiroelle.notifier.NotifierServiceGrpc
 import com.google.gson.GsonBuilder
+import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -47,7 +51,17 @@ fun main() = runBlocking {
 
     val proxyService = retrofit.create(JapScanProxyApiService::class.java)
 
-    val downloadTask = DownloadTask(mangaRepository, chapterRepository, proxyService, ebooksFolder)
+    val channel = ManagedChannelBuilder.forAddress("127.0.0.1", 9090)
+        .usePlaintext()
+        .build()
+
+    val notifierService = NotifierServiceGrpc.newBlockingStub(channel)
+    val notificationManager = NotificationManager(notifierService)
+
+
+
+
+    val downloadTask = DownloadTask(notificationManager, mangaRepository, chapterRepository, proxyService, ebooksFolder)
     downloadTask()
 
 }

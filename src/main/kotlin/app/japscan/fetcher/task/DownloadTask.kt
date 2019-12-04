@@ -5,14 +5,18 @@ import app.japscan.fetcher.db.Chapter
 import app.japscan.fetcher.db.ChapterRepository
 import app.japscan.fetcher.db.Manga
 import app.japscan.fetcher.db.MangaRepository
+import app.japscan.fetcher.notifier.NotificationManager
+import com.arnaudpiroelle.notifier.Notifier
 import okio.buffer
 import okio.sink
 import java.io.File
 import java.io.FileOutputStream
+import java.net.InetAddress
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 class DownloadTask(
+    private val notificationManager: NotificationManager,
     private val mangaRepository: MangaRepository,
     private val chapterRepository: ChapterRepository,
     private val japScanProxyApiService: JapScanProxyApiService,
@@ -21,6 +25,11 @@ class DownloadTask(
     suspend operator fun invoke() {
         println("Get the manga list from japscan")
         val mangas = japScanProxyApiService.findMangas().map { Manga(it.name, it.alias) }
+
+        val agentBuilder = Notifier.Agent.newBuilder()
+            .setName(InetAddress.getLocalHost().hostName)
+            .setTotalManga(mangas.size)
+            .setDownloadedManga(0)
 
         mangas.forEach { manga ->
             println("Fetch ${manga.name}")
@@ -36,7 +45,11 @@ class DownloadTask(
             mangaRepository.createOrUpdate(manga)
             chapterRepository.createOrUpdate(*chapters.toTypedArray())
 
-            chapters.forEach { chapter ->
+            val taskBuilder = Notifier.Task.newBuilder()
+                .setName(Thread.currentThread().name)
+                .setTotalChapter(chapters.size)
+
+            chapters.forEachIndexed { indexChapter, chapter ->
                 val alreadyDownloaded = chapterRepository.isDownloaded(manga, chapter)
                 val chapterName = "$mangaName - ${chapter.number}"
 
@@ -64,6 +77,21 @@ class DownloadTask(
                             buffer.writeAll(source)
                             buffer.flush()
                             print(".")
+
+                            notificationManager.notify(
+                                agentBuilder.clearTasks()
+                                    .addAllTasks(
+                                        listOf(
+                                            taskBuilder.setTotalPage(pages.pages.size)
+                                                .setCurrentChapter(indexChapter)
+                                                .setCurrentPage(index)
+                                                .setManga(manga.name)
+                                                .setChapter(chapter.number)
+                                                .build()
+                                        )
+                                    )
+                                    .build()
+                            )
                         }
                         buffer.close()
                         out.close()
@@ -72,6 +100,7 @@ class DownloadTask(
                         chapterRepository.createOrUpdate(chapter.copy(downloaded = true))
                     } catch (e: Exception) {
                         println("Error when downloading $chapterName")
+                        e.printStackTrace()
                         if (chapterFile.exists()) {
                             chapterFile.delete()
                         }
@@ -80,6 +109,8 @@ class DownloadTask(
                     println("$chapterName already downloaded")
                 }
             }
+
+            agentBuilder.downloadedManga = agentBuilder.downloadedManga++
         }
     }
 }
