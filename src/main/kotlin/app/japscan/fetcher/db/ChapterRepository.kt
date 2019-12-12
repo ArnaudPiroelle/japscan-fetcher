@@ -15,6 +15,7 @@ class ChapterRepository(private val db: Database) {
 
     fun createOrUpdate(vararg chapters: Chapter) = transaction(db) {
         chapters.forEach { chapter ->
+            //println(chapter)
             val existingChapter =
                 Chapters.select(where = { (Chapters.mangaAlias eq chapter.mangaAlias) and (Chapters.number eq chapter.number) })
                     .firstOrNull()
@@ -31,7 +32,7 @@ class ChapterRepository(private val db: Database) {
                     it[mangaAlias] = chapter.mangaAlias
                     it[number] = chapter.number
                     if (chapter.downloaded != null) {
-                        it[downloaded] = chapter.downloaded
+                        it[downloaded] = existingChapter[Chapters.downloaded] || chapter.downloaded
                     }
                 }
             }
@@ -42,6 +43,14 @@ class ChapterRepository(private val db: Database) {
         Chapters.select(where = { (Chapters.mangaAlias eq manga.alias) and (Chapters.number eq chapter.number) }).firstOrNull()?.get(
             Chapters.downloaded
         ) ?: false
+    }
+
+    fun getAll(mangaAlias: String): List<Chapter> = transaction(db) {
+        Chapters.select(where = { (Chapters.mangaAlias eq mangaAlias) }).map { Chapter(it[Chapters.mangaAlias], it[Chapters.number], it[Chapters.downloaded]) }
+    }
+
+    fun removeAll() = transaction(db){
+        Chapters.deleteAll()
     }
 }
 

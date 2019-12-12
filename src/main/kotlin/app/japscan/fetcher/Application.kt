@@ -4,9 +4,10 @@ import app.japscan.fetcher.api.JapScanProxyApiService
 import app.japscan.fetcher.db.ChapterRepository
 import app.japscan.fetcher.db.MangaRepository
 import app.japscan.fetcher.notifier.NotificationManager
+import app.japscan.fetcher.notifier.Notifier
+import app.japscan.fetcher.notifier.RemoteNotifier
 import app.japscan.fetcher.task.DownloadTask
-import com.arnaudpiroelle.notifier.Notifier
-import com.arnaudpiroelle.notifier.NotifierServiceGrpc
+import app.japscan.fetcher.task.FetchTask
 import com.google.gson.GsonBuilder
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.runBlocking
@@ -18,9 +19,10 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 import java.util.concurrent.TimeUnit
 
+
 fun main() = runBlocking {
-    val downloadPath = "/Users/arnaud/Desktop/eBooks-Full"
-    val db = Database.connect("jdbc:h2:file:$downloadPath/mangas", driver = "org.h2.Driver")
+    val downloadPath = "D:\\Downloads\\eBooks\\"
+    val db = Database.connect("jdbc:h2:file:$downloadPath/h2", driver = "org.h2.Driver")
     val mangaRepository = MangaRepository(db)
     val chapterRepository = ChapterRepository(db)
 
@@ -55,15 +57,12 @@ fun main() = runBlocking {
         .usePlaintext()
         .build()
 
-    val notifierService = NotifierServiceGrpc.newBlockingStub(channel)
-    val notificationManager = NotificationManager(notifierService)
+    //val notifierService = NotifierServiceGrpc.newBlockingStub(channel)
 
-
-
+    val notifiers = listOf<Notifier>()
+    val notificationManager = NotificationManager(notifiers)
 
     val downloadTask = DownloadTask(notificationManager, mangaRepository, chapterRepository, proxyService, ebooksFolder)
+    val fetchTask = FetchTask(mangaRepository, chapterRepository, proxyService, ebooksFolder)
     downloadTask()
-
 }
-
-

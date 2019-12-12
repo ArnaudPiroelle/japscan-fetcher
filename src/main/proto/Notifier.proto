@@ -1,32 +1,26 @@
 syntax = "proto3";
 
-package com.arnaudpiroelle.notifier;
+package app.japscan.fetcher;
 
 message ProgressResponse {
-    repeated Agent agents = 1;
+    Status status = 1;
 }
 
-message Agent {
-    string name = 1;
-    int32 downloadedManga = 2;
-    int32 totalManga = 3;
-    repeated Task tasks = 4;
-}
-
-message Task {
-    string name = 1;
-    string manga = 2;
-    string chapter = 3;
-    int32 currentChapter = 4;
-    int32 totalChapter = 5;
-    int32 currentPage = 6;
-    int32 totalPage = 7;
+message Status {
+    int32 downloadedManga = 1;
+    int32 totalManga = 2;
+    string manga = 3;
+    string chapter = 4;
+    int32 currentChapter = 5;
+    int32 totalChapter = 6;
+    int32 currentPage = 7;
+    int32 totalPage = 8;
 }
 
 message SubscribeRequest { }
 
 message NotifyRequest {
-    Agent agent = 1;
+    Status status = 1;
 }
 
 message NotifyResponse {

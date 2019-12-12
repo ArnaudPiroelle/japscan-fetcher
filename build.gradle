@@ -11,7 +11,6 @@ repositories {
     jcenter()
 }
 
-
 sourceSets {
     main.java.srcDirs += 'build/generated/source/proto/main/java'
     main.java.srcDirs += 'build/generated/source/proto/main/grpc'
@@ -30,6 +29,9 @@ dependencies {
     implementation("io.grpc:grpc-netty-shaded:${grpcVersion}")
     implementation("io.grpc:grpc-protobuf:${grpcVersion}")
     implementation("io.grpc:grpc-stub:${grpcVersion}")
+
+    implementation "javax.annotation:javax.annotation-api:1.2"
+
 }
 
 compileKotlin {
@@ -39,7 +41,6 @@ compileKotlin {
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
-
 
 protobuf {
     protoc { artifact = 'com.google.protobuf:protoc:3.10.1' }
