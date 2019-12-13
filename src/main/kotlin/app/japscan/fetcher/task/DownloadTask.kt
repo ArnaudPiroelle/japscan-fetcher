@@ -30,10 +30,11 @@ class DownloadTask(
         notifier.notify(new)
     }
 
-    suspend operator fun invoke() {
+    suspend operator fun invoke(requestedMangas: List<String>) {
         println("Get the manga list from database")
 
         val mangas = mangaRepository.getAll()
+            .filter { requestedMangas.isEmpty() || it.alias in requestedMangas }
 
         status = status.copy(downloadedManga = 0, totalManga = mangas.size)
         mangas.forEach {
@@ -72,7 +73,6 @@ class DownloadTask(
                 val pages = japScanProxyApiService.findPages(manga.alias, chapter.number)
                 val postProcess = pages.postProcess
 
-                println("postProcess: $postProcess")
                 status = status.copy(chapter = chapterName, downloadedPage = 0, totalPage = pages.pages.size)
 
                 mangaFolder.mkdirs()
@@ -125,9 +125,9 @@ class DownloadTask(
 
         val source = response.source()
 
-        when(postProcess){
+        when (postProcess) {
             "MOSAIC" -> MosaicProcessing.process(source.inputStream(), buffer.outputStream())
-            else ->  buffer.writeAll(source)
+            else -> buffer.writeAll(source)
 
         }
 

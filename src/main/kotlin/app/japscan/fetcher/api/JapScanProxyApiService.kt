@@ -2,6 +2,7 @@ package app.japscan.fetcher.api
 
 import okhttp3.ResponseBody
 import retrofit2.http.GET
+import retrofit2.http.Headers
 import retrofit2.http.Path
 import retrofit2.http.Url
 

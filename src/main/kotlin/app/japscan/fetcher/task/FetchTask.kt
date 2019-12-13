@@ -5,34 +5,17 @@ import app.japscan.fetcher.db.Chapter
 import app.japscan.fetcher.db.ChapterRepository
 import app.japscan.fetcher.db.Manga
 import app.japscan.fetcher.db.MangaRepository
-import java.io.File
 
 class FetchTask(
     private val mangaRepository: MangaRepository,
     private val chapterRepository: ChapterRepository,
-    private val japScanProxyApiService: JapScanProxyApiService,
-    private val ebooksFolder: File
+    private val japScanProxyApiService: JapScanProxyApiService
 ) {
-    suspend operator fun invoke() {
+    suspend operator fun invoke(mangas: List<String>) {
         println("Get the manga list from japscan")
 
-        /*mangaRepository.getAll()
-            .forEach { manga ->
-                val chapters = chapterRepository.getAll(manga.alias)
-                println("${manga.name} : ${chapters.size} chapters")
-                chapters.forEach {chapter ->
-                    val mangaName = manga.name.replace("/", "-").replace(":", "-")
-                    val mangaFolder = File(ebooksFolder, mangaName)
-                    val chapterName = "$mangaName - ${chapter.number}".replace(":", "-")
-                    val chapterFile = File(mangaFolder, "$chapterName.cbz")
-
-                   chapterRepository.createOrUpdate(chapter.copy(downloaded = chapterFile.exists()))
-                }
-            }
-
-         */
-
         japScanProxyApiService.findMangas()
+            .filter { mangas.isEmpty() || it.alias in mangas }
             .map { Manga(it.name, it.alias) }
             .forEach { manga ->
                 println("Fetch ${manga.name}")
